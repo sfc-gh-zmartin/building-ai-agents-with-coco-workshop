@@ -83,7 +83,9 @@ Same pattern works on any dataset in your organization.
 - [CoCo documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-code)
 - [Getting Started with Cortex Agents](https://www.snowflake.com/en/developers/guides/getting-started-with-cortex-agents/)
 - [Build an End-to-End App with CoCo](https://www.snowflake.com/en/developers/guides/sfguide-build-end-to-end-ai-app-on-snowflake/)
-- [Dash Desai's guides](https://github.com/iamontheinet) — Principal Developer Advocate, Snowflake
+- [Getting Started with Snowflake CoWork](https://www.snowflake.com/en/developers/guides/getting-started-with-snowflake-cowork/)
+- [Getting Started with the Snowflake MCP Server](https://www.snowflake.com/en/developers/guides/getting-started-with-snowflake-mcp-server/)
+- [Getting Started with Snowflake Cortex AI](https://quickstarts.snowflake.com/guide/getting-started-with-snowflake-cortex-ai/)
 
 ---
 
