@@ -4,11 +4,15 @@
 
 Workshop materials for *Build an AI Agent in 60 Minutes with Snowflake CoCo*, presented by [Richie Bachala](https://www.snowflake.com/en/blog/authors/richie-bachala/), Solutions Architecture Leader at Snowflake.
 
+![Workshop demo — 5-step CoCo build](TechEquity-Workshop-Demo.gif)
+
 ---
 
 ## What You'll Build
 
 **GitTrend** — a working Cortex AI agent that answers natural language questions about trending GitHub repositories, powered by 4 billion+ real GitHub events from the GH Archive.
+
+![GitTrend answering questions in CoWork](gittrend-showcase.gif)
 
 Ask it things like:
 - *"What's the fastest-growing AI project in the last 30 days?"*
@@ -60,10 +64,13 @@ If you don't see it: **Admin → Snowsight Features → Enable CoCo**.
 |---|---|
 | [`WORKSHOP-GUIDE.md`](WORKSHOP-GUIDE.md) | Step-by-step guide — follow this during the session |
 | [`CHECKPOINTS.sql`](CHECKPOINTS.sql) | Fallback SQL for each step — use if CoCo gets stuck |
+| [`BLOG.md`](BLOG.md) | Post-event writeup |
 
 ---
 
 ## The 5-Step Pattern
+
+![Workshop teaser — intro to payoff](workshop-teaser.gif)
 
 ```
 1. Mount the data        →  GH Archive from Marketplace (free, one click)
