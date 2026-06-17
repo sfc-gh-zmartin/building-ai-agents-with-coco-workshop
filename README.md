@@ -28,7 +28,9 @@ CoCo writes every SQL statement. You direct it. You own the result.
 Complete these steps **before June 30** so we can skip setup during the session.
 
 ### 1. Create a free Snowflake trial account
-Go to [snowflake.com/try](https://snowflake.com/try) → Sign up → Choose **AWS US East**.
+Use the event-specific link below — it enables all AI features for the workshop:
+**[Sign up here](https://signup.snowflake.com/?t=521d04bacb9556ae0a2fcb837fbf1db2e78f9e0581a062acb9c7e4100ac1eba6)**
+Choose **AWS US East** when prompted. Select **AI Data Cloud** as your use case.
 
 ### 2. Mount the GH Archive dataset
 In Snowsight (Snowflake's UI):
@@ -64,7 +66,6 @@ If you don't see it: **Admin → Snowsight Features → Enable CoCo**.
 |---|---|
 | [`WORKSHOP-GUIDE.md`](WORKSHOP-GUIDE.md) | Step-by-step guide — follow this during the session |
 | [`CHECKPOINTS.sql`](CHECKPOINTS.sql) | Fallback SQL for each step — use if CoCo gets stuck |
-| [`BLOG.md`](BLOG.md) | Post-event writeup |
 
 ---
 
@@ -86,7 +87,7 @@ Same pattern works on any dataset in your organization.
 
 ## Resources
 
-- [Free Snowflake trial](https://snowflake.com/try)
+- [Event trial account signup](https://signup.snowflake.com/?t=521d04bacb9556ae0a2fcb837fbf1db2e78f9e0581a062acb9c7e4100ac1eba6)
 - [CoCo documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-code)
 - [Getting Started with Cortex Agents](https://www.snowflake.com/en/developers/guides/getting-started-with-cortex-agents/)
 - [Build an End-to-End App with CoCo](https://www.snowflake.com/en/developers/guides/sfguide-build-end-to-end-ai-app-on-snowflake/)
