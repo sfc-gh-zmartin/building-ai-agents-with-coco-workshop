@@ -10,7 +10,9 @@
 Complete these steps **before June 30** so we can skip setup during the session.
 
 ### 1. Create a free Snowflake trial account
-Go to **snowflake.com/try** → Sign up → Choose AWS US East.
+Use this event-specific link to sign up — it enables all AI features for the workshop:
+**[Sign up here](https://signup.snowflake.com/?t=521d04bacb9556ae0a2fcb837fbf1db2e78f9e0581a062acb9c7e4100ac1eba6)**
+Choose **AWS US East** when prompted. Select **AI Data Cloud** as your use case.
 You'll use this account for everything in tonight's workshop.
 
 ### 2. Get the GH Archive dataset
