@@ -15,16 +15,8 @@ Use this event-specific link to sign up — it enables all AI features for the w
 Choose **AWS US East** when prompted. Select **AI Data Cloud** as your use case.
 You'll use this account for everything in tonight's workshop.
 
-### 2. Get the GH Archive dataset
-Once logged in to Snowflake (Snowsight):
-1. Left nav → **Data Products → Marketplace**
-2. Search: `GH Archive`
-3. Click the listing → **Get**
-4. Database name: `GH_ARCHIVE` (keep default)
-5. Click **Get** — done. No cost, no import.
-
-### 3. Run the one-time setup SQL
-In Snowsight, open a new SQL Worksheet and run this block once:
+### 2. Load the GitHub Archive dataset
+In Snowsight, open a new SQL Worksheet and run this block — it creates your database, loads ~107M real GitHub events from a public S3 bucket, and enables Cortex AI. **This takes ~7 minutes on the default XS warehouse — start it now.**
 
 ```sql
 USE ROLE ACCOUNTADMIN;
@@ -36,9 +28,52 @@ USE SCHEMA GITTREND_DB.PUBLIC;
 USE WAREHOUSE WORKSHOP_WH;
 -- Enable Cortex AI cross-region (required for CORTEX.COMPLETE)
 ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
+
+-- Load GitHub Archive data from public S3 (~7 min)
+CREATE OR REPLACE FILE FORMAT GITHUB_JSON_FORMAT
+  TYPE = 'JSON'
+  STRIP_OUTER_ARRAY = TRUE
+  COMPRESSION = 'GZIP';
+
+CREATE OR REPLACE STAGE GITHUB_STAGE
+  URL = 's3://sfquickstarts/vhol_building_ai_agents_with_coco/'
+  FILE_FORMAT = GITHUB_JSON_FORMAT;
+
+CREATE OR REPLACE TABLE GITTREND_DB.PUBLIC.GITHUB_EVENTS (
+    RAW          VARIANT,
+    EVENT_ID     STRING,
+    EVENT_TYPE   STRING,
+    CREATED_AT   TIMESTAMP,
+    ACTOR_LOGIN  STRING,
+    ACTOR_ID     NUMBER,
+    REPO_NAME    STRING,
+    REPO_ID      NUMBER,
+    ORG_LOGIN    STRING,
+    IS_PUBLIC    BOOLEAN
+);
+
+COPY INTO GITTREND_DB.PUBLIC.GITHUB_EVENTS
+FROM (
+    SELECT
+        $1,
+        $1:id::STRING,
+        $1:type::STRING,
+        $1:created_at::TIMESTAMP,
+        $1:actor:login::STRING,
+        $1:actor:id::NUMBER,
+        $1:repo:name::STRING,
+        $1:repo:id::NUMBER,
+        $1:org:login::STRING,
+        $1:public::BOOLEAN
+    FROM @GITHUB_STAGE
+)
+PATTERN = '.*json.gz';
+
+-- Verify (~107M rows expected)
+SELECT COUNT(*) FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS;
 ```
 
-### 4. Verify CoCo is available
+### 3. Verify CoCo is available
 In Snowsight, look for **CoCo** in the left nav (the coding agent icon).
 If you don't see it, go to **Admin → Snowsight Features** and enable it.
 
@@ -62,12 +97,12 @@ It runs against 4 billion+ real GitHub events. You built it. You own it.
 ## The Stack
 
 ```
-GH Archive (Marketplace)     →  your data
-CoCo                         →  writes the code
-CORTEX.COMPLETE              →  turns SQL results into language
-CORTEX.SEARCH                →  semantic search over repo descriptions
-Cortex Agent (GitTrend)      →  wires it all together
-CoWork                       →  where you ask it questions
+GITTREND_DB.PUBLIC.GITHUB_EVENTS  →  your data (107M real GitHub events)
+CoCo                               →  writes the code
+CORTEX.COMPLETE                    →  turns SQL results into language
+CORTEX.SEARCH                      →  semantic search over repo descriptions
+Cortex Agent (GitTrend)            →  wires it all together
+CoWork                             →  where you ask it questions
 ```
 
 ---
@@ -82,20 +117,19 @@ Open CoCo from the left nav in Snowsight. You'll see a chat interface — this i
 Paste this into CoCo exactly:
 
 ```
-I have a database called GH_ARCHIVE mounted from Snowflake Marketplace.
-Explore it: list all tables, describe the key columns in each,
+I have a table called GITTREND_DB.PUBLIC.GITHUB_EVENTS loaded from the GitHub Archive.
+Explore it: describe the key columns,
 and explain what types of GitHub events are tracked.
 Tell me which columns would be most useful for finding
 trending AI and ML repositories by star activity.
 ```
 
 **What CoCo does:**
-- Runs `SHOW TABLES` and `DESCRIBE TABLE`
-- Samples rows to understand the shape of the data
-- Explains the `type` column values (WatchEvent = star, PushEvent = commit, etc.)
-- Recommends which columns to use for trending analysis
+- Runs `DESCRIBE TABLE` and samples rows to understand the shape of the data
+- Explains the `EVENT_TYPE` column values (WatchEvent = star, PushEvent = commit, etc.)
+- Recommends which columns to use for trending analysis (`EVENT_TYPE`, `REPO_NAME`, `CREATED_AT`)
 
-> **Checkpoint 1:** CoCo should identify the `EVENTS` table and explain that `WatchEvent` records a user starring a repo. It should point you to `repo:name`, `created_at`, and `type` as the key columns.
+> **Checkpoint 1:** CoCo should identify that `WatchEvent` records a user starring a repo and point you to `REPO_NAME`, `CREATED_AT`, and `EVENT_TYPE` as the key columns.
 >
 > If CoCo gets stuck, run the SQL in `CHECKPOINTS.sql` → **Checkpoint 1** manually.
 
@@ -109,21 +143,21 @@ Now tell CoCo what you want to find.
 ### Prompt
 
 ```
-Using the GH_ARCHIVE.PUBLIC.EVENTS table:
+Using the GITTREND_DB.PUBLIC.GITHUB_EVENTS table:
 
 Write a SQL query that finds the top 20 repositories
 that gained the most stars in the last 30 days,
 where the repo name or description suggests AI, ML,
 LLM, agent, or open source tooling.
 
-Include: repo name, stars gained, primary language
-(if available), and a short description (if available).
+Include: repo name, stars gained, and a short description
+(if available in the RAW column).
 
 Order by stars gained descending.
 ```
 
 **What CoCo generates:**
-A query filtering `type = 'WatchEvent'`, grouping by repo, and aggregating star counts over the date range. It handles the semi-structured JSON columns (`repo:name::string`) automatically.
+A query filtering `EVENT_TYPE = 'WatchEvent'`, grouping by `REPO_NAME`, and aggregating star counts over the date range. For description it pulls from the `RAW` variant column (`RAW:repo:description::string`).
 
 ### Run it
 
@@ -208,13 +242,13 @@ CREATE OR REPLACE CORTEX SEARCH SERVICE GITHUB_REPO_SEARCH
   TARGET LAG = '1 hour'
 AS (
   SELECT
-      repo:name::string                                AS repo_name,
-      COALESCE(repo:description::string, repo:name::string) AS description,
-      COUNT(*)                                         AS stars_gained
-  FROM GH_ARCHIVE.PUBLIC.EVENTS
-  WHERE type = 'WatchEvent'
-    AND created_at >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-  GROUP BY repo_name, description
+      REPO_NAME                                              AS repo_name,
+      COALESCE(RAW:repo:description::string, REPO_NAME)     AS description,
+      COUNT(*)                                              AS stars_gained
+  FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
+  WHERE EVENT_TYPE = 'WatchEvent'
+    AND CREATED_AT >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+  GROUP BY REPO_NAME, description
   HAVING COUNT(*) >= 5
 );
 ```
@@ -317,10 +351,10 @@ but are gaining stars fast?
 ## What You Built
 
 ```
-GH_ARCHIVE             — 4B+ GitHub events, mounted in 1 click
-GITHUB_REPO_SEARCH     — Cortex Search index on repo descriptions
-GITTREND               — Cortex Agent: search + complete + system prompt
-CoWork interface       — Natural language Q&A on real GitHub data
+GITTREND_DB.PUBLIC.GITHUB_EVENTS  —  107M real GitHub events loaded from S3
+GITHUB_REPO_SEARCH                —  Cortex Search index on repo descriptions
+GITTREND                          —  Cortex Agent: search + complete + system prompt
+CoWork interface                  —  Natural language Q&A on real GitHub data
 ```
 
 CoCo wrote every SQL statement. You directed it.

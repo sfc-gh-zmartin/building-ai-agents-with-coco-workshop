@@ -16,36 +16,77 @@ USE WAREHOUSE WORKSHOP_WH;
 -- Required for CORTEX.COMPLETE (run this now, not later)
 ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
+-- Load GH Archive data from public S3 (~7 min on XS warehouse)
+CREATE OR REPLACE FILE FORMAT GITHUB_JSON_FORMAT
+  TYPE = 'JSON'
+  STRIP_OUTER_ARRAY = TRUE
+  COMPRESSION = 'GZIP';
+
+CREATE OR REPLACE STAGE GITHUB_STAGE
+  URL = 's3://sfquickstarts/vhol_building_ai_agents_with_coco/'
+  FILE_FORMAT = GITHUB_JSON_FORMAT;
+
+CREATE OR REPLACE TABLE GITTREND_DB.PUBLIC.GITHUB_EVENTS (
+    RAW          VARIANT,
+    EVENT_ID     STRING,
+    EVENT_TYPE   STRING,
+    CREATED_AT   TIMESTAMP,
+    ACTOR_LOGIN  STRING,
+    ACTOR_ID     NUMBER,
+    REPO_NAME    STRING,
+    REPO_ID      NUMBER,
+    ORG_LOGIN    STRING,
+    IS_PUBLIC    BOOLEAN
+);
+
+COPY INTO GITTREND_DB.PUBLIC.GITHUB_EVENTS
+FROM (
+    SELECT
+        $1,
+        $1:id::STRING,
+        $1:type::STRING,
+        $1:created_at::TIMESTAMP,
+        $1:actor:login::STRING,
+        $1:actor:id::NUMBER,
+        $1:repo:name::STRING,
+        $1:repo:id::NUMBER,
+        $1:org:login::STRING,
+        $1:public::BOOLEAN
+    FROM @GITHUB_STAGE
+)
+PATTERN = '.*json.gz';
+
+-- Verify row count (~107M expected)
+SELECT COUNT(*) FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS;
+
 
 -- ============================================================
 -- CHECKPOINT 1 — Explore the GH Archive schema
 -- ============================================================
 -- Understand what tables exist and what WatchEvent means
 
-SHOW TABLES IN GH_ARCHIVE.PUBLIC;
-
-DESCRIBE TABLE GH_ARCHIVE.PUBLIC.EVENTS;
+DESCRIBE TABLE GITTREND_DB.PUBLIC.GITHUB_EVENTS;
 
 -- Sample 5 rows to see the structure
-SELECT * FROM GH_ARCHIVE.PUBLIC.EVENTS LIMIT 5;
+SELECT * FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS LIMIT 5;
 
 -- See all the event types available
-SELECT type, COUNT(*) AS event_count
-FROM GH_ARCHIVE.PUBLIC.EVENTS
-WHERE created_at >= DATEADD('day', -7, CURRENT_TIMESTAMP())
-GROUP BY type
+SELECT EVENT_TYPE, COUNT(*) AS event_count
+FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
+WHERE CREATED_AT >= DATEADD('day', -7, CURRENT_TIMESTAMP())
+GROUP BY EVENT_TYPE
 ORDER BY event_count DESC;
 
 -- Preview star events (WatchEvent = someone starred a repo)
 SELECT
-    type,
-    repo:name::string          AS repo_name,
-    repo:description::string   AS repo_description,
-    actor:login::string        AS starred_by,
-    created_at
-FROM GH_ARCHIVE.PUBLIC.EVENTS
-WHERE type = 'WatchEvent'
-  AND created_at >= DATEADD('day', -1, CURRENT_TIMESTAMP())
+    EVENT_TYPE,
+    REPO_NAME,
+    RAW:repo:description::string   AS repo_description,
+    ACTOR_LOGIN                    AS starred_by,
+    CREATED_AT
+FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
+WHERE EVENT_TYPE = 'WatchEvent'
+  AND CREATED_AT >= DATEADD('day', -1, CURRENT_TIMESTAMP())
 LIMIT 20;
 
 
@@ -55,27 +96,27 @@ LIMIT 20;
 
 CREATE OR REPLACE VIEW GITTREND_DB.PUBLIC.V_TRENDING_AI_REPOS AS
 SELECT
-    repo:name::string                                    AS repo_name,
-    COALESCE(repo:description::string, repo:name::string) AS description,
-    COUNT(*)                                             AS stars_gained,
-    MIN(created_at)                                      AS first_star_at,
-    MAX(created_at)                                      AS last_star_at
-FROM GH_ARCHIVE.PUBLIC.EVENTS
-WHERE type = 'WatchEvent'
-  AND created_at >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+    REPO_NAME                                                  AS repo_name,
+    COALESCE(RAW:repo:description::string, REPO_NAME)          AS description,
+    COUNT(*)                                                   AS stars_gained,
+    MIN(CREATED_AT)                                            AS first_star_at,
+    MAX(CREATED_AT)                                            AS last_star_at
+FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
+WHERE EVENT_TYPE = 'WatchEvent'
+  AND CREATED_AT >= DATEADD('day', -30, CURRENT_TIMESTAMP())
   AND (
-      LOWER(repo:name::string)        LIKE '%llm%'
-   OR LOWER(repo:name::string)        LIKE '%agent%'
-   OR LOWER(repo:name::string)        LIKE '%gpt%'
-   OR LOWER(repo:name::string)        LIKE '%ai%'
-   OR LOWER(repo:name::string)        LIKE '%ml%'
-   OR LOWER(repo:name::string)        LIKE '%mcp%'
-   OR LOWER(repo:description::string) LIKE '%large language model%'
-   OR LOWER(repo:description::string) LIKE '%agentic%'
-   OR LOWER(repo:description::string) LIKE '%open source ai%'
-   OR LOWER(repo:description::string) LIKE '%cortex%'
+      LOWER(REPO_NAME)                      LIKE '%llm%'
+   OR LOWER(REPO_NAME)                      LIKE '%agent%'
+   OR LOWER(REPO_NAME)                      LIKE '%gpt%'
+   OR LOWER(REPO_NAME)                      LIKE '%ai%'
+   OR LOWER(REPO_NAME)                      LIKE '%ml%'
+   OR LOWER(REPO_NAME)                      LIKE '%mcp%'
+   OR LOWER(RAW:repo:description::string)   LIKE '%large language model%'
+   OR LOWER(RAW:repo:description::string)   LIKE '%agentic%'
+   OR LOWER(RAW:repo:description::string)   LIKE '%open source ai%'
+   OR LOWER(RAW:repo:description::string)   LIKE '%cortex%'
   )
-GROUP BY repo_name, description
+GROUP BY REPO_NAME, description
 HAVING COUNT(*) >= 10;
 
 -- Run the view (ORDER BY on the SELECT, not inside the view)
