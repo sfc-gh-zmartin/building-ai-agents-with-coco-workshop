@@ -90,7 +90,7 @@ By the end of this session you will have built **GitTrend** — a working AI age
 - *"What languages dominate trending repos right now?"*
 - *"Is there anything blowing up in agentic AI this week?"*
 
-It runs against 4 billion+ real GitHub events. You built it. You own it.
+It runs against 107M+ real GitHub events. You built it. You own it.
 
 ---
 
