@@ -9,14 +9,14 @@
 USE ROLE ACCOUNTADMIN;
 CREATE DATABASE IF NOT EXISTS GITTREND_DB;
 CREATE SCHEMA IF NOT EXISTS GITTREND_DB.PUBLIC;
-CREATE WAREHOUSE IF NOT EXISTS WORKSHOP_WH WAREHOUSE_SIZE = XSMALL AUTO_SUSPEND = 60;
+CREATE WAREHOUSE IF NOT EXISTS WORKSHOP_WH WAREHOUSE_SIZE = SMALL AUTO_SUSPEND = 60;
 USE DATABASE GITTREND_DB;
 USE SCHEMA GITTREND_DB.PUBLIC;
 USE WAREHOUSE WORKSHOP_WH;
 -- Required for CORTEX.COMPLETE (run this now, not later)
 ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
--- Load GH Archive data from public S3 (~7 min on XS warehouse)
+-- Load GH Archive data from public S3 (~4 min on Small warehouse)
 CREATE OR REPLACE FILE FORMAT GITHUB_JSON_FORMAT
   TYPE = 'JSON'
   STRIP_OUTER_ARRAY = TRUE
@@ -164,7 +164,7 @@ CREATE OR REPLACE CORTEX SEARCH SERVICE GITTREND_DB.PUBLIC.GITHUB_REPO_SEARCH
     ON description
     ATTRIBUTES repo_name, stars_gained
     WAREHOUSE = WORKSHOP_WH
-    TARGET LAG = '1 hour'
+    TARGET_LAG = '1 hour'
 AS (
     SELECT
         repo_name,
@@ -182,29 +182,35 @@ SHOW CORTEX SEARCH SERVICES IN SCHEMA GITTREND_DB.PUBLIC;
 -- CHECKPOINT 5 — Create the GitTrend Cortex Agent
 -- ============================================================
 
-CREATE OR REPLACE CORTEX AGENT GITTREND_DB.PUBLIC.GITTREND
-    TOOLS = (
-        CORTEX_SEARCH_SERVICE GITTREND_DB.PUBLIC.GITHUB_REPO_SEARCH
-    )
+CREATE OR REPLACE AGENT GITTREND_DB.PUBLIC.GITTREND
     COMMENT = 'GitHub trend analyst — 30 days of real star activity'
-AS
+    FROM SPECIFICATION
 $$
-You are GitTrend, a GitHub trend analyst with access to 30 days of
-real GitHub star activity data from the GH Archive dataset.
+models:
+  orchestration: "claude-4-sonnet"
 
-You answer questions about:
-- Trending open source projects and repositories
-- Emerging technologies and programming languages
-- Developer community momentum and breakout projects
-- Comparisons between repos, topics, or categories
+instructions:
+  system: >
+    You are GitTrend, a GitHub trend analyst with access to 30 days of real
+    GitHub star activity data from the GitHub Archive. You help users discover
+    trending repositories, emerging technologies, and developer community activity
+    in AI, ML, open source tooling, and software engineering.
+    Always cite which specific repositories you are drawing from when making claims.
+    When presenting results, include star counts and organization names where available.
+  response: >
+    Be concise and data-driven. Use bullet points for lists of repositories.
+    Always mention the repo name in owner/repo format and the star count when referencing data.
 
-When answering:
-- Always name specific repositories with their star counts
-- Note the primary language or category when relevant
-- If asked about a topic (e.g., "agentic AI"), search for it directly
-- Be direct — developers want signal, not noise
-- Do not make claims that are not supported by the data you have access to
-- If you are unsure, say so rather than guessing
+tools:
+  - tool_spec:
+      type: "cortex_search"
+      name: "github_repo_search"
+      description: "Search GitHub repositories by semantic meaning. Use this to find repos related to a topic, technology, or use case based on their names, organizations, and activity patterns."
+
+tool_resources:
+  github_repo_search:
+    name: "GITTREND_DB.PUBLIC.GITHUB_REPO_SEARCH"
+    max_results: 10
 $$;
 
 -- Verify

@@ -16,18 +16,17 @@ Choose **AWS US East** when prompted. Select **AI Data Cloud** as your use case.
 You'll use this account for everything in tonight's workshop.
 
 ### 2. Load the GitHub Archive dataset
-In Snowsight, open a new SQL Worksheet and run this block — it creates your database, loads ~107M real GitHub events from a public S3 bucket, and enables Cortex AI. **This takes ~7 minutes on the default XS warehouse — start it now.**
+In Snowsight, open a new SQL Worksheet and run this block — it creates your database, loads ~107M real GitHub events from a public S3 bucket, and enables Cortex AI. **This takes ~4 minutes on the Small warehouse — start it now.**
 
 ```sql
 USE ROLE ACCOUNTADMIN;
 CREATE DATABASE IF NOT EXISTS GITTREND_DB;
 CREATE SCHEMA IF NOT EXISTS GITTREND_DB.PUBLIC;
-CREATE WAREHOUSE IF NOT EXISTS WORKSHOP_WH WAREHOUSE_SIZE = XSMALL AUTO_SUSPEND = 60;
+CREATE WAREHOUSE IF NOT EXISTS WORKSHOP_WH WAREHOUSE_SIZE = SMALL AUTO_SUSPEND = 60;
 USE DATABASE GITTREND_DB;
 USE SCHEMA GITTREND_DB.PUBLIC;
 USE WAREHOUSE WORKSHOP_WH;
 -- Enable Cortex AI cross-region (required for CORTEX.COMPLETE)
-ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
 -- Load GitHub Archive data from public S3 (~7 min)
 CREATE OR REPLACE FILE FORMAT GITHUB_JSON_FORMAT
@@ -150,16 +149,14 @@ that gained the most stars in the last 30 days,
 where the repo name or description suggests AI, ML,
 LLM, agent, or open source tooling.
 
-Include: repo name, stars gained, and a short description
-(if available in the RAW column).
-
+Include: repo name and stars gained.
 Order by stars gained descending.
 ```
 
 **What CoCo generates:**
-A query filtering `EVENT_TYPE = 'WatchEvent'`, grouping by `REPO_NAME`, and aggregating star counts over the date range. For description it pulls from the `RAW` variant column (`RAW:repo:description::string`).
+A query filtering `EVENT_TYPE = 'WatchEvent'`, grouping by `REPO_NAME`, and aggregating star counts over the date range.
 
-> **Note:** The dataset covers a fixed 30-day window loaded at setup time. All date filters use `-30 days` to stay within that window.
+> **Note:** The dataset covers a fixed 30-day window loaded at setup time. All date filters use `-30 days` to stay within that window. The `description` field is not available in this dataset — repo names are used as the searchable identifier.
 
 ### Run it
 

@@ -33,13 +33,13 @@ Use the event-specific link below — it enables all AI features for the worksho
 Choose **AWS US East** when prompted. Select **AI Data Cloud** as your use case.
 
 ### 2. Load the GitHub Archive dataset
-Open a new SQL Worksheet in Snowsight and run the full setup block below. It creates your database and loads ~107M real GitHub events from a public S3 bucket. **Takes ~7 minutes — start this now.**
+Open a new SQL Worksheet in Snowsight and run the full setup block below. It creates your database and loads ~107M real GitHub events from a public S3 bucket. **Takes ~4 minutes — start this now.**
 
 ```sql
 USE ROLE ACCOUNTADMIN;
 CREATE DATABASE IF NOT EXISTS GITTREND_DB;
 CREATE SCHEMA IF NOT EXISTS GITTREND_DB.PUBLIC;
-CREATE WAREHOUSE IF NOT EXISTS WORKSHOP_WH WAREHOUSE_SIZE = XSMALL AUTO_SUSPEND = 60;
+CREATE WAREHOUSE IF NOT EXISTS WORKSHOP_WH WAREHOUSE_SIZE = SMALL AUTO_SUSPEND = 60;
 USE DATABASE GITTREND_DB;
 USE SCHEMA GITTREND_DB.PUBLIC;
 USE WAREHOUSE WORKSHOP_WH;
