@@ -61,9 +61,9 @@ SELECT COUNT(*) FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS;
 
 
 -- ============================================================
--- CHECKPOINT 1 — Explore the GH Archive schema
+-- CHECKPOINT 1 — Explore the GITHUB_EVENTS schema
 -- ============================================================
--- Understand what tables exist and what WatchEvent means
+-- Understand the table structure and what WatchEvent means
 
 DESCRIBE TABLE GITTREND_DB.PUBLIC.GITHUB_EVENTS;
 
@@ -78,10 +78,11 @@ GROUP BY EVENT_TYPE
 ORDER BY event_count DESC;
 
 -- Preview star events (WatchEvent = someone starred a repo)
+-- NOTE: RAW:repo:description is not present in this dataset; repo_description will be NULL
 SELECT
     EVENT_TYPE,
     REPO_NAME,
-    RAW:repo:description::string   AS repo_description,
+    RAW:repo:description::string   AS repo_description,  -- will be NULL
     ACTOR_LOGIN                    AS starred_by,
     CREATED_AT
 FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
@@ -96,27 +97,23 @@ LIMIT 20;
 
 CREATE OR REPLACE VIEW GITTREND_DB.PUBLIC.V_TRENDING_AI_REPOS AS
 SELECT
-    REPO_NAME                                                  AS repo_name,
-    COALESCE(RAW:repo:description::string, REPO_NAME)          AS description,
-    COUNT(*)                                                   AS stars_gained,
-    MIN(CREATED_AT)                                            AS first_star_at,
-    MAX(CREATED_AT)                                            AS last_star_at
+    REPO_NAME          AS repo_name,
+    REPO_NAME          AS description,   -- description field not in dataset; using repo_name
+    COUNT(*)           AS stars_gained,
+    MIN(CREATED_AT)    AS first_star_at,
+    MAX(CREATED_AT)    AS last_star_at
 FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
 WHERE EVENT_TYPE = 'WatchEvent'
   AND CREATED_AT >= DATEADD('day', -30, CURRENT_TIMESTAMP())
   AND (
-      LOWER(REPO_NAME)                      LIKE '%llm%'
-   OR LOWER(REPO_NAME)                      LIKE '%agent%'
-   OR LOWER(REPO_NAME)                      LIKE '%gpt%'
-   OR LOWER(REPO_NAME)                      LIKE '%ai%'
-   OR LOWER(REPO_NAME)                      LIKE '%ml%'
-   OR LOWER(REPO_NAME)                      LIKE '%mcp%'
-   OR LOWER(RAW:repo:description::string)   LIKE '%large language model%'
-   OR LOWER(RAW:repo:description::string)   LIKE '%agentic%'
-   OR LOWER(RAW:repo:description::string)   LIKE '%open source ai%'
-   OR LOWER(RAW:repo:description::string)   LIKE '%cortex%'
+      LOWER(REPO_NAME) LIKE '%llm%'
+   OR LOWER(REPO_NAME) LIKE '%agent%'
+   OR LOWER(REPO_NAME) LIKE '%gpt%'
+   OR LOWER(REPO_NAME) LIKE '%ai%'
+   OR LOWER(REPO_NAME) LIKE '%ml%'
+   OR LOWER(REPO_NAME) LIKE '%mcp%'
   )
-GROUP BY REPO_NAME, description
+GROUP BY REPO_NAME
 HAVING COUNT(*) >= 10;
 
 -- Run the view (ORDER BY on the SELECT, not inside the view)
@@ -156,7 +153,7 @@ SELECT SNOWFLAKE.CORTEX.COMPLETE(
 
 
 -- ============================================================
--- CHECKPOINT 4 — Cortex Search Service on repo descriptions
+-- CHECKPOINT 4 — Cortex Search Service on repo names
 -- ============================================================
 -- NOTE: Requires Checkpoint 2 view (V_TRENDING_AI_REPOS) to exist first.
 
@@ -166,12 +163,8 @@ CREATE OR REPLACE CORTEX SEARCH SERVICE GITTREND_DB.PUBLIC.GITHUB_REPO_SEARCH
     WAREHOUSE = WORKSHOP_WH
     TARGET_LAG = '1 hour'
 AS (
-    SELECT
-        repo_name,
-        COALESCE(description, repo_name) AS description,
-        stars_gained
+    SELECT repo_name, description, stars_gained
     FROM V_TRENDING_AI_REPOS
-    WHERE description IS NOT NULL
 );
 
 -- Verify it's active (may take 30-60 seconds)

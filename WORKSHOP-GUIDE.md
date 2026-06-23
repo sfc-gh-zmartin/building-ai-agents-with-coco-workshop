@@ -28,7 +28,7 @@ USE SCHEMA GITTREND_DB.PUBLIC;
 USE WAREHOUSE WORKSHOP_WH;
 -- Enable Cortex AI cross-region (required for CORTEX.COMPLETE)
 
--- Load GitHub Archive data from public S3 (~7 min)
+-- Load GitHub Archive data from public S3 (~4 min)
 CREATE OR REPLACE FILE FORMAT GITHUB_JSON_FORMAT
   TYPE = 'JSON'
   STRIP_OUTER_ARRAY = TRUE
@@ -215,7 +215,7 @@ SELECT SNOWFLAKE.CORTEX.COMPLETE(
 ## Step 4 — Create a Cortex Search Service
 **⏱ 35–45 min**
 
-`CORTEX.COMPLETE` summarizes. `CORTEX.SEARCH` finds. Now give your agent the ability to semantically search across repo descriptions.
+`CORTEX.COMPLETE` summarizes. `CORTEX.SEARCH` finds. Now give your agent the ability to semantically search across repo names.
 
 ### Prompt
 
@@ -223,9 +223,8 @@ SELECT SNOWFLAKE.CORTEX.COMPLETE(
 Create a Cortex Search Service called GITHUB_REPO_SEARCH
 using the GITHUB_EVENTS data we loaded.
 
-It should index the repo descriptions and names
-so users can search semantically — for example,
-"find repos related to autonomous agents" or
+It should index repo names so users can search semantically —
+for example, "find repos related to autonomous agents" or
 "what projects are working on RAG pipelines".
 
 Use WORKSHOP_WH as the warehouse.
@@ -235,19 +234,19 @@ Use WORKSHOP_WH as the warehouse.
 
 ```sql
 CREATE OR REPLACE CORTEX SEARCH SERVICE GITHUB_REPO_SEARCH
-  ON description
+  ON repo_name
   ATTRIBUTES repo_name, stars_gained
   WAREHOUSE = WORKSHOP_WH
   TARGET_LAG = '1 hour'
 AS (
   SELECT
-      REPO_NAME                                              AS repo_name,
-      COALESCE(RAW:repo:description::string, REPO_NAME)     AS description,
-      COUNT(*)                                              AS stars_gained
+      REPO_NAME                AS repo_name,
+      REPO_NAME                AS description,
+      COUNT(*)                 AS stars_gained
   FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
   WHERE EVENT_TYPE = 'WatchEvent'
     AND CREATED_AT >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-  GROUP BY REPO_NAME, description
+  GROUP BY REPO_NAME
   HAVING COUNT(*) >= 5
 );
 ```
@@ -380,7 +379,7 @@ Create a file called `AGENTS.md` at the root of any project folder. Put your Sno
 ```
 # AGENTS.md
 Account: myorg-myaccount
-Role: DATA_ENGINEER
+Role: ACCOUNTADMIN
 Warehouse: WORKSHOP_WH
 Database: GITTREND_DB
 Schema: GITTREND_DB.PUBLIC
