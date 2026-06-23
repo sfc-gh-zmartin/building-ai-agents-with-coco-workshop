@@ -159,6 +159,8 @@ Order by stars gained descending.
 **What CoCo generates:**
 A query filtering `EVENT_TYPE = 'WatchEvent'`, grouping by `REPO_NAME`, and aggregating star counts over the date range. For description it pulls from the `RAW` variant column (`RAW:repo:description::string`).
 
+> **Note:** The dataset covers a fixed 30-day window loaded at setup time. All date filters use `-30 days` to stay within that window.
+
 ### Run it
 
 Click **Run** in the CoCo output or paste the SQL into a new worksheet. You should see a real table of the hottest AI repos right now.

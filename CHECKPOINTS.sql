@@ -73,7 +73,7 @@ SELECT * FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS LIMIT 5;
 -- See all the event types available
 SELECT EVENT_TYPE, COUNT(*) AS event_count
 FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
-WHERE CREATED_AT >= DATEADD('day', -7, CURRENT_TIMESTAMP())
+WHERE CREATED_AT >= DATEADD('day', -30, CURRENT_TIMESTAMP())
 GROUP BY EVENT_TYPE
 ORDER BY event_count DESC;
 
@@ -86,7 +86,7 @@ SELECT
     CREATED_AT
 FROM GITTREND_DB.PUBLIC.GITHUB_EVENTS
 WHERE EVENT_TYPE = 'WatchEvent'
-  AND CREATED_AT >= DATEADD('day', -1, CURRENT_TIMESTAMP())
+  AND CREATED_AT >= DATEADD('day', -30, CURRENT_TIMESTAMP())
 LIMIT 20;
 
 
@@ -158,6 +158,7 @@ SELECT SNOWFLAKE.CORTEX.COMPLETE(
 -- ============================================================
 -- CHECKPOINT 4 — Cortex Search Service on repo descriptions
 -- ============================================================
+-- NOTE: Requires Checkpoint 2 view (V_TRENDING_AI_REPOS) to exist first.
 
 CREATE OR REPLACE CORTEX SEARCH SERVICE GITTREND_DB.PUBLIC.GITHUB_REPO_SEARCH
     ON description
