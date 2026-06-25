@@ -27,6 +27,7 @@ USE DATABASE GITTREND_DB;
 USE SCHEMA GITTREND_DB.PUBLIC;
 USE WAREHOUSE WORKSHOP_WH;
 -- Enable Cortex AI cross-region (required for CORTEX.COMPLETE)
+ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
 -- Load GitHub Archive data from public S3 (~4 min)
 CREATE OR REPLACE FILE FORMAT GITHUB_JSON_FORMAT
@@ -99,7 +100,7 @@ It runs against 107M+ real GitHub events. You built it. You own it.
 GITTREND_DB.PUBLIC.GITHUB_EVENTS  →  your data (107M real GitHub events)
 CoCo                               →  writes the code
 CORTEX.COMPLETE                    →  turns SQL results into language
-CORTEX.SEARCH                      →  semantic search over repo descriptions
+CORTEX.SEARCH                      →  semantic search over repo names
 Cortex Agent (GitTrend)            →  wires it all together
 CoWork                             →  where you ask it questions
 ```
@@ -366,7 +367,7 @@ but are gaining stars fast?
 
 ```
 GITTREND_DB.PUBLIC.GITHUB_EVENTS  —  107M real GitHub events loaded from S3
-GITHUB_REPO_SEARCH                —  Cortex Search index on repo descriptions
+GITHUB_REPO_SEARCH                —  Cortex Search index on repo names
 GITTREND                          —  Cortex Agent: search + complete + system prompt
 CoWork interface                  —  Natural language Q&A on real GitHub data
 ```
