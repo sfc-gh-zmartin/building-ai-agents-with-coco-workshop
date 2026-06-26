@@ -223,10 +223,7 @@ SHOW AGENTS IN SCHEMA GITTREND_DB.PUBLIC;
 -- ============================================================
 -- Primary interface: CoWork (left nav → CoWork → find GitTrend → ask questions).
 --
--- To test the Cortex Search service directly in SQL:
--- NOTE: Verify SNOWFLAKE.CORTEX.SEARCH_PREVIEW function name is correct
--- for your account version before the event. Alternatively use the REST API:
--- POST /api/v2/databases/GITTREND_DB/schemas/PUBLIC/cortex-search-services/GITHUB_REPO_SEARCH:query
+-- To test the Cortex Search service directly in SQL (verified working):
 SELECT PARSE_JSON(
     SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
         'GITTREND_DB.PUBLIC.GITHUB_REPO_SEARCH',
