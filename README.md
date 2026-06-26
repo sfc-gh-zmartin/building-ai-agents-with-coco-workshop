@@ -4,7 +4,7 @@
 
 Workshop materials for *Build an AI Agent in 60 Minutes with Snowflake CoCo*, presented by [Richie Bachala](https://www.snowflake.com/en/blog/authors/richie-bachala/), Solutions Architecture Leader at Snowflake.
 
-![Workshop demo — 5-step CoCo build](TechEquity-Workshop-Demo.gif)
+![Workshop demo — 5-step CoCo build](Building%20AI%20Agents%20with%20CoCo%20-%20Demo%20Intro.mp4)
 
 ---
 
