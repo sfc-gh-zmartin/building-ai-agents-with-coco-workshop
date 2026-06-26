@@ -127,6 +127,8 @@ SELECT * FROM V_TRENDING_AI_REPOS ORDER BY stars_gained DESC LIMIT 20;
 -- ALTER ACCOUNT is already in the SETUP block above.
 -- If you jumped here directly without running SETUP, run this first:
 --   ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
+-- NOTE: CORTEX.COMPLETE is being replaced by AI_COMPLETE (end of 2026).
+-- Both work today. Use AI_COMPLETE in new projects going forward.
 
 SELECT SNOWFLAKE.CORTEX.COMPLETE(
     'claude-4-sonnet',
@@ -181,7 +183,7 @@ CREATE OR REPLACE AGENT GITTREND_DB.PUBLIC.GITTREND
     FROM SPECIFICATION
 $$
 models:
-  orchestration: "claude-4-sonnet"
+  orchestration: "claude-sonnet-4-5"
 
 instructions:
   system: >

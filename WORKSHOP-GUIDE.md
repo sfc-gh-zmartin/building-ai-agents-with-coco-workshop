@@ -272,7 +272,7 @@ Create a Cortex Agent called GITTREND that:
 
 1. Uses GITHUB_REPO_SEARCH (the Cortex Search service we just built)
    as a search tool for finding relevant repos
-2. Uses CORTEX.COMPLETE with claude-4-sonnet to synthesize answers
+2. Uses claude-sonnet-4-5 as the orchestration model
 3. Has a system prompt that tells it:
    - It is a GitHub trend analyst
    - It has access to 30 days of real GitHub star data
@@ -291,7 +291,7 @@ CREATE OR REPLACE AGENT GITTREND_DB.PUBLIC.GITTREND
   FROM SPECIFICATION
 $$
 models:
-  orchestration: "claude-4-sonnet"
+  orchestration: "claude-sonnet-4-5"
 
 instructions:
   system: >
