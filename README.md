@@ -12,7 +12,7 @@ Workshop materials for *Build an AI Agent in 60 Minutes with Snowflake CoCo*, pr
 
 | Video | Link |
 |---|---|
-| 1 — Intro & Overview | [Watch →](https://youtu.be/Fnx0xtOC92I) |
+| 1 — Intro & Overview | [Watch →](https://youtu.be/Vp2p7jHkHHA) |
 | 2 — Full Build (Step-by-Step) | [Watch →](https://youtu.be/0o_7TmiaeGY) |
 | 3 — Bonus: Export to Stage | [Watch →](https://youtu.be/Fnx0xtOC92I) |
 
