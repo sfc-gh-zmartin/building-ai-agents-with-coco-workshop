@@ -36,7 +36,7 @@ Choose **AWS US East (Ohio)** when prompted. Select **AI Data Cloud For Enterpri
 
 > **⚠️ Timing matters:** This link only activates AI features for accounts created **July 26–31, 2026 (UTC)**. Don't sign up before July 26 — you'll get a standard trial without the AI features needed for this workshop.
 
-> If you attended the June forum, your existing account is fine — just install the CoCo CLI above.
+> **Attended the June forum?** Create a new account using the link above after July 26 — your previous trial may be near expiry and v2 requires features only available through the updated event link. Takes 2 minutes.
 
 ---
 

@@ -33,7 +33,7 @@ Use this event-specific link — it activates all AI features automatically:
 **[signup.snowflake.com/?t=aaf6ac35aa6362f3f3a48ca28405ade45a945e7e5054586a923a4d62dfbada9d&cloud=aws&region=us-east-2](https://signup.snowflake.com/?t=aaf6ac35aa6362f3f3a48ca28405ade45a945e7e5054586a923a4d62dfbada9d&cloud=aws&region=us-east-2)**
 Choose **AWS US East (Ohio)** when prompted. Select **AI Data Cloud For Enterprise** from the toggle at the top of the page.
 
-> If you attended the June forum, your existing trial account works fine. Skip to Step 0.
+> **Attended the June forum?** Create a new account using the link above after July 26 — your previous trial may be near expiry and v2 requires features only available through the updated event link. Takes 2 minutes.
 
 ---
 
