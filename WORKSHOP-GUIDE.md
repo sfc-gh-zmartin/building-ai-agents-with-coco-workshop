@@ -163,11 +163,12 @@ by star activity.
 Using GITTREND_DB.PUBLIC.GITHUB_EVENTS:
 
 Create a view called GITTREND_DB.PUBLIC.V_TRENDING_AI_REPOS that finds repos
-that gained the most stars in the last 30 days of available data (anchor to MAX(CREATED_AT), not CURRENT_TIMESTAMP — the dataset ends June 18), where the repo name suggests
-AI, ML, LLM, agent, MCP, or open source (names containing "open").
+that gained the most stars in the last 30 days. The data in this table only
+goes through June 18, 2026 — use that as the end of the 30-day window, not
+CURRENT_TIMESTAMP.
 
-Include: repo name as both repo_name and description, stars gained,
-first and last star timestamps.
+Where the repo name suggests AI, ML, LLM, agent, MCP, or open source (names containing "open").
+Include: repo name as both repo_name and description, stars gained, first and last star timestamps.
 Only include repos with 10 or more stars gained.
 
 Then query the view to show the top 20 repos by stars gained, descending.
