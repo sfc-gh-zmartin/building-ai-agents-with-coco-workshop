@@ -29,9 +29,13 @@ cortex --version
 ```
 
 ### 2. Have a Snowflake account ready
+
 Use this event-specific link — it activates all AI features automatically:
-**[signup.snowflake.com/?t=aaf6ac35aa6362f3f3a48ca28405ade45a945e7e5054586a923a4d62dfbada9d&cloud=aws&region=us-east-2](https://signup.snowflake.com/?t=aaf6ac35aa6362f3f3a48ca28405ade45a945e7e5054586a923a4d62dfbada9d&cloud=aws&region=us-east-2)**
+**[Sign up here →](https://signup.snowflake.com/?t=aaf6ac35aa6362f3f3a48ca28405ade45a945e7e5054586a923a4d62dfbada9d&cloud=aws&region=us-east-2)**
+
 Choose **AWS US East (Ohio)** when prompted. Select **AI Data Cloud For Enterprise** from the toggle at the top of the page.
+
+> **⚠️ Timing matters:** This link only activates AI features for accounts created between **July 26–31, 2026 (UTC)**. Do not sign up before July 26 — accounts created early will work as a standard trial without the AI features required for this workshop.
 
 > **Attended the June forum?** Create a new account using the link above after July 26 — your previous trial may be near expiry and v2 requires features only available through the updated event link. Takes 2 minutes.
 
@@ -159,7 +163,7 @@ by star activity.
 Using GITTREND_DB.PUBLIC.GITHUB_EVENTS:
 
 Create a view called GITTREND_DB.PUBLIC.V_TRENDING_AI_REPOS that finds repos
-that gained the most stars in the last 30 days, where the repo name suggests
+that gained the most stars in the last 30 days of available data (anchor to MAX(CREATED_AT), not CURRENT_TIMESTAMP — the dataset ends June 18), where the repo name suggests
 AI, ML, LLM, agent, MCP, or open source (names containing "open").
 
 Include: repo name as both repo_name and description, stars gained,
@@ -169,7 +173,7 @@ Only include repos with 10 or more stars gained.
 Then query the view to show the top 20 repos by stars gained, descending.
 ```
 
-**The moment:** Call out the project at the top of your list. That's 107M GitHub events surfacing what the developer community is actually building right now.
+**The moment:** Call out the project at the top of your list. That's 107M GitHub events surfacing what the developer community was actually building — real signal from the archive, not a model's training memory.
 
 > Stuck? → `CHECKPOINTS.sql` → Checkpoint 2
 
