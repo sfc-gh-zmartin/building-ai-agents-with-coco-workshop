@@ -281,7 +281,7 @@ Verify: `SHOW MCP SERVERS IN SCHEMA GITTREND_DB.PUBLIC;`
 
 ### 3b — Set up OAuth
 
-MCP clients authenticate via OAuth. Run this to create the security integration:
+MCP clients authenticate via OAuth. The redirect URI below is for **claude.ai (web)**. If using Claude Desktop app or Cursor, use the redirect URI shown during their OAuth setup flow instead.
 
 ```sql
 CREATE OR REPLACE SECURITY INTEGRATION GITTREND_MCP_OAUTH
@@ -301,7 +301,7 @@ SELECT SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('GITTREND_MCP_OAUTH');
 
 Set your user's default role and warehouse (required for MCP OAuth sessions):
 ```sql
-ALTER USER <your_username> SET DEFAULT_ROLE = 'ACCOUNTADMIN' DEFAULT_WAREHOUSE = 'WORKSHOP_WH';
+ALTER USER IDENTIFIER(CURRENT_USER()) SET DEFAULT_ROLE = 'ACCOUNTADMIN' DEFAULT_WAREHOUSE = 'WORKSHOP_WH';
 ```
 
 > Stuck? → `CHECKPOINTS.sql` → Checkpoint 6 (OAuth block)
@@ -315,12 +315,14 @@ https://<your-account-url>/api/v2/databases/GITTREND_DB/schemas/PUBLIC/mcp-serve
 
 > **Important:** Replace any underscores (`_`) in your account URL hostname with hyphens (`-`). Some MCP clients have issues with underscores. For example: `myorg-myaccount.snowflakecomputing.com` — keep hyphens, don't add extra.
 
-**Option A — Claude Desktop:**
-1. Open Settings → Connectors
+**Option A — claude.ai (web):**
+1. Go to claude.ai → Settings → Connectors
 2. Click **Add custom connector**
 3. Name: `GitTrend` | URL: your MCP Server URL above
-4. Enter client ID and secret from 3b
+4. Enter the client ID and secret from 3b
 5. Click Add → authenticate in the browser popup
+
+> **Using Claude Desktop (the app)?** Claude Desktop uses a different OAuth redirect URI — use the localhost URI shown when you set up the connector in Desktop, not `claude.ai/api/mcp/auth_callback`. Update the `OAUTH_REDIRECT_URI` in step 3b accordingly.
 
 **Option B — Cursor (`mcp.json`):**
 

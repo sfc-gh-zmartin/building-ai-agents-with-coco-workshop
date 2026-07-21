@@ -239,8 +239,9 @@ CREATE OR REPLACE MCP SERVER GITTREND_DB.PUBLIC.GITTREND_MCP
 SHOW MCP SERVERS IN SCHEMA GITTREND_DB.PUBLIC;
 
 -- Step 2: Create OAuth security integration
--- OAUTH_REDIRECT_URI below is for Claude Desktop.
--- For Cursor: change to the redirect URI shown during Cursor's OAuth setup flow.
+-- OAUTH_REDIRECT_URI below is for claude.ai (web interface at claude.ai/chat).
+-- For Claude Desktop app: use the localhost URI shown during Desktop's connector setup.
+-- For Cursor: use the redirect URI shown during Cursor's OAuth setup flow.
 CREATE OR REPLACE SECURITY INTEGRATION GITTREND_MCP_OAUTH
   TYPE = OAUTH
   OAUTH_CLIENT = CUSTOM
@@ -252,8 +253,7 @@ CREATE OR REPLACE SECURITY INTEGRATION GITTREND_MCP_OAUTH
 SELECT SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('GITTREND_MCP_OAUTH');
 
 -- Step 4: Set your user's default role + warehouse (required for MCP OAuth sessions)
--- Replace <your_username> with your Snowflake username
-ALTER USER <your_username> SET DEFAULT_ROLE = 'ACCOUNTADMIN' DEFAULT_WAREHOUSE = 'WORKSHOP_WH';
+ALTER USER IDENTIFIER(CURRENT_USER()) SET DEFAULT_ROLE = 'ACCOUNTADMIN' DEFAULT_WAREHOUSE = 'WORKSHOP_WH';
 
 
 -- ============================================================
