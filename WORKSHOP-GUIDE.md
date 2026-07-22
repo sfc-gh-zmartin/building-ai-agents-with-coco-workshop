@@ -125,10 +125,16 @@ In your CoCo terminal, paste this prompt:
 Run the following setup SQL in my Snowflake account:
 - Create GITTREND_DB database and PUBLIC schema
 - Create WORKSHOP_WH warehouse (Small size, auto-suspend 60s)
-- Enable Cortex AI cross-region
-- Create a JSON file format and S3 stage pointing to s3://sfquickstarts/vhol_building_ai_agents_with_coco/
-- Create GITHUB_EVENTS table with columns: RAW VARIANT, EVENT_ID, EVENT_TYPE, CREATED_AT, ACTOR_LOGIN, ACTOR_ID, REPO_NAME, REPO_ID, ORG_LOGIN, IS_PUBLIC
-- COPY INTO from the stage using pattern .*json.gz
+- Enable Cortex AI cross-region with ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION'
+- Create a JSON file format (STRIP_OUTER_ARRAY = TRUE, COMPRESSION = GZIP) and an S3 stage pointing to s3://sfquickstarts/vhol_building_ai_agents_with_coco/
+- Create GITHUB_EVENTS table with columns: RAW VARIANT, EVENT_ID STRING, EVENT_TYPE STRING, CREATED_AT TIMESTAMP, ACTOR_LOGIN STRING, ACTOR_ID NUMBER, REPO_NAME STRING, REPO_ID NUMBER, ORG_LOGIN STRING, IS_PUBLIC BOOLEAN
+- COPY INTO the table using a transformation query that extracts fields from the raw JSON:
+  RAW = $1, EVENT_ID = $1:id::STRING, EVENT_TYPE = $1:type::STRING,
+  CREATED_AT = $1:created_at::TIMESTAMP, ACTOR_LOGIN = $1:actor:login::STRING,
+  ACTOR_ID = $1:actor:id::NUMBER, REPO_NAME = $1:repo:name::STRING,
+  REPO_ID = $1:repo:id::NUMBER, ORG_LOGIN = $1:org:login::STRING,
+  IS_PUBLIC = $1:public::BOOLEAN
+  Use pattern .*json.gz
 - Run SELECT COUNT(*) to verify (~107M rows expected)
 ```
 
@@ -167,7 +173,7 @@ that gained the most stars in the last 30 days. The data in this table only
 goes through June 18, 2026 — use that as the end of the 30-day window, not
 CURRENT_TIMESTAMP.
 
-Where the repo name suggests AI, ML, LLM, agent, MCP, or open source (names containing "open").
+Where the repo name suggests AI, ML, LLM, GPT, agent, MCP, or open source (names containing "open").
 Include: repo name as both repo_name and description, stars gained, first and last star timestamps.
 Only include repos with 10 or more stars gained.
 
@@ -227,6 +233,9 @@ Create a Cortex Agent called GITTREND_DB.PUBLIC.GITTREND that:
    - It should answer questions about trending repos, emerging technologies,
      and developer community activity
    - It should always cite the specific repos it's drawing from
+   - In its response formatting, it should be concise and data-driven,
+     use bullet points for repo lists, and always mention the repo name
+     in owner/repo format with the star count
 
 Create it in GITTREND_DB.PUBLIC.
 ```
